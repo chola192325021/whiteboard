@@ -62,7 +62,6 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
 });
 
-// Tool logic
 document.getElementById("colorPicker").addEventListener("input", (e) => {
   penColor = e.target.value;
   if (!isErasing) color = penColor;
@@ -106,9 +105,12 @@ document.getElementById("viewBtn").addEventListener("click", () => {
   modal.style.display = "flex";
 });
 
-// Load saved image at startup
-const savedImage = new Image();
-savedImage.src = "saved-board.png";
-savedImage.onload = () => {
-  ctx.drawImage(savedImage, 0, 0, canvas.width, canvas.height);
-};
+// ✅ Load saved image into canvas
+document.getElementById("loadBtn").addEventListener("click", () => {
+  const img = new Image();
+  img.src = "saved-board.png?t=" + new Date().getTime();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+});
