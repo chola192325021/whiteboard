@@ -26,14 +26,16 @@
     .toolbar label {
       margin-right: 10px;
     }
+    .toolbar button {
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
   <div class="toolbar">
-    <label>Color:
-      <input type="color" id="colorPicker" value="#000000">
-    </label>
+    <label>Color: <input type="color" id="colorPicker" value="#000000"></label>
     <button id="clearBtn">Clear</button>
+    <button id="saveBtn">Save</button>
   </div>
   <canvas id="board"></canvas>
   <script src="script.js"></script>
