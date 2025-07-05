@@ -58,16 +58,19 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
 });
 
+// 🎨 Color picker
 document.getElementById("colorPicker").addEventListener("input", (e) => {
   color = e.target.value;
 });
 
+// 🧹 Clear and broadcast
 document.getElementById("clearBtn").addEventListener("click", () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const data = { type: "clear" };
   socket.send(JSON.stringify(data));
 });
 
+// 💾 Save canvas to server
 document.getElementById("saveBtn").addEventListener("click", () => {
   const dataURL = canvas.toDataURL("image/png");
 
@@ -82,3 +85,10 @@ document.getElementById("saveBtn").addEventListener("click", () => {
   .then(msg => alert(msg))
   .catch(err => alert("Save failed"));
 });
+
+// 🖼 Load saved image
+const savedImage = new Image();
+savedImage.src = "saved-board.png";
+savedImage.onload = () => {
+  ctx.drawImage(savedImage, 0, 0, canvas.width, canvas.height);
+};
