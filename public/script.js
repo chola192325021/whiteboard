@@ -5,13 +5,11 @@ canvas.height = window.innerHeight;
 
 let color = 'black';
 let drawing = false;
-
 let socket = new WebSocket("wss://whiteboard-1-jtnv.onrender.com");
 
 socket.onmessage = function(event) {
   event.data.text().then((message) => {
     const data = JSON.parse(message);
-
     if (data.type === "draw") {
       draw(data.x0, data.y0, data.x1, data.y1, data.color, false);
     } else if (data.type === "clear") {
@@ -66,7 +64,21 @@ document.getElementById("colorPicker").addEventListener("input", (e) => {
 
 document.getElementById("clearBtn").addEventListener("click", () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   const data = { type: "clear" };
   socket.send(JSON.stringify(data));
+});
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const dataURL = canvas.toDataURL("image/png");
+
+  fetch("/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ image: dataURL })
+  })
+  .then(res => res.text())
+  .then(msg => alert(msg))
+  .catch(err => alert("Save failed"));
 });
