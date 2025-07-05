@@ -5,7 +5,7 @@ canvas.height = window.innerHeight;
 
 let color = 'black';
 let drawing = false;
-let socket = new WebSocket("wss://whiteboard.onrender.com");
+let socket = new WebSocket("wss://whiteboard-1-jtnv.onrender.com");
 
 // ✅ FIXED: Handle Blob correctly by converting to text before parsing
 socket.onmessage = function(event) {
