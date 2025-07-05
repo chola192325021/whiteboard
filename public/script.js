@@ -3,27 +3,31 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let color = 'black';
 let drawing = false;
 let socket = new WebSocket("wss://whiteboard-1-jtnv.onrender.com");
+
+let penColor = "#000000";
+let color = penColor;
+let penSize = 2;
+let isErasing = false;
 
 socket.onmessage = function(event) {
   event.data.text().then((message) => {
     const data = JSON.parse(message);
     if (data.type === "draw") {
-      draw(data.x0, data.y0, data.x1, data.y1, data.color, false);
+      draw(data.x0, data.y0, data.x1, data.y1, data.color, data.size, false);
     } else if (data.type === "clear") {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
-  }).catch(err => console.error("Error reading message:", err));
+  });
 };
 
-function draw(x0, y0, x1, y1, color = 'black', emit = true) {
+function draw(x0, y0, x1, y1, color = 'black', size = 2, emit = true) {
   ctx.beginPath();
   ctx.moveTo(x0, y0);
   ctx.lineTo(x1, y1);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = size;
   ctx.stroke();
   ctx.closePath();
 
@@ -31,7 +35,7 @@ function draw(x0, y0, x1, y1, color = 'black', emit = true) {
 
   const data = {
     type: "draw",
-    x0, y0, x1, y1, color
+    x0, y0, x1, y1, color, size
   };
   socket.send(JSON.stringify(data));
 }
@@ -49,7 +53,7 @@ canvas.addEventListener("mouseup", () => {
 
 canvas.addEventListener("mousemove", (e) => {
   if (!drawing) return;
-  draw(last.x, last.y, e.clientX, e.clientY, color, true);
+  draw(last.x, last.y, e.clientX, e.clientY, color, penSize, true);
   last = { x: e.clientX, y: e.clientY };
 });
 
@@ -58,19 +62,27 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
 });
 
-// 🎨 Color picker
+// Tool logic
 document.getElementById("colorPicker").addEventListener("input", (e) => {
-  color = e.target.value;
+  penColor = e.target.value;
+  if (!isErasing) color = penColor;
 });
 
-// 🧹 Clear and broadcast
+document.getElementById("penSize").addEventListener("input", (e) => {
+  penSize = parseInt(e.target.value);
+});
+
+document.getElementById("eraserBtn").addEventListener("click", () => {
+  isErasing = !isErasing;
+  color = isErasing ? "#ffffff" : penColor;
+});
+
 document.getElementById("clearBtn").addEventListener("click", () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const data = { type: "clear" };
   socket.send(JSON.stringify(data));
 });
 
-// 💾 Save canvas to server
 document.getElementById("saveBtn").addEventListener("click", () => {
   const dataURL = canvas.toDataURL("image/png");
 
@@ -86,7 +98,15 @@ document.getElementById("saveBtn").addEventListener("click", () => {
   .catch(err => alert("Save failed"));
 });
 
-// 🖼 Load saved image
+document.getElementById("viewBtn").addEventListener("click", () => {
+  const modal = document.getElementById("previewModal");
+  const img = document.getElementById("previewImage");
+
+  img.src = "saved-board.png?t=" + new Date().getTime(); // bust cache
+  modal.style.display = "flex";
+});
+
+// Load saved image at startup
 const savedImage = new Image();
 savedImage.src = "saved-board.png";
 savedImage.onload = () => {
