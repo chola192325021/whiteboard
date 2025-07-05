@@ -5,13 +5,18 @@ canvas.height = window.innerHeight;
 
 let color = 'black';
 let drawing = false;
+
 let socket = new WebSocket("wss://whiteboard-1-jtnv.onrender.com");
 
-// ✅ FIXED: Handle Blob correctly by converting to text before parsing
 socket.onmessage = function(event) {
   event.data.text().then((message) => {
     const data = JSON.parse(message);
-    draw(data.x0, data.y0, data.x1, data.y1, data.color, false);
+
+    if (data.type === "draw") {
+      draw(data.x0, data.y0, data.x1, data.y1, data.color, false);
+    } else if (data.type === "clear") {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }).catch(err => console.error("Error reading message:", err));
 };
 
@@ -26,7 +31,10 @@ function draw(x0, y0, x1, y1, color = 'black', emit = true) {
 
   if (!emit) return;
 
-  const data = { x0, y0, x1, y1, color };
+  const data = {
+    type: "draw",
+    x0, y0, x1, y1, color
+  };
   socket.send(JSON.stringify(data));
 }
 
@@ -50,4 +58,15 @@ canvas.addEventListener("mousemove", (e) => {
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+});
+
+document.getElementById("colorPicker").addEventListener("input", (e) => {
+  color = e.target.value;
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const data = { type: "clear" };
+  socket.send(JSON.stringify(data));
 });
